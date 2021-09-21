@@ -1,0 +1,8 @@
+app:
+  name: "guestbook"
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+  source:
+    repoURL: https://github.com/ederqueirozdf/lab-apps.git
+    targetRevision: HEAD
