@@ -21,10 +21,8 @@ spec:
       - pathType: Prefix
         path: {{ .Values.ingress.path }}
         backend:
-          service:
-            name: {{ $fullName }}
-            port:
-              number: {{ $svcPort }}
+          serviceName: {{ $fullName }}
+          servicePort: {{ $svcPort }}              
   # tls:
   # - hosts:
   #   - argocd.local
