@@ -1,8 +1,64 @@
-app:
-  name: "guestbook"
-spec:
-  destination:
-    server: https://kubernetes.default.svc
-  source:
-    repoURL: https://github.com/ederqueirozdf/lab-apps.git
-    targetRevision: HEAD
+clusterK8s:
+  name: "k8s-lab"
+  server: https://kubernetes.default.svc
+  source: https://github.com/ederqueirozdf/lab-apps2.git
+  extraApi: 
+    - namespace: "*"
+      server: https://kubernetes.default.svc  
+
+argocd:
+  namespace: argocd-2
+  disablePrune: false
+
+# #####################################################################
+# APPS
+# #####################################################################
+
+  apps:
+    - name: "guestbook2"
+      finalizers: []
+      labels: []
+        # - key: chave
+        #   value: valor
+      annotations: []
+        # - key: chave
+        #   value: valor
+      spec:
+        project: k8s-lab
+        source:
+          path: guestbook
+          repoURL: https://github.com/ederqueirozdf/lab-apps2.git
+          targetRevision: HEAD     
+        destination:
+          namespace: guestbook2
+          server: https://kubernetes.default.svc
+        syncPolicy:
+          automated:
+            prune: true
+            selfHeal: true
+
+# #####################################################################
+# MONITOR
+# #####################################################################
+
+    - name: "thanos"
+      finalizers: []
+      labels: []
+        # - key: chave
+        #   value: valor
+      annotations: []
+        # - key: chave
+        #   value: valor
+      spec:
+        project: k8s-lab
+        source:
+          path: thanos
+          repoURL: https://github.com/ederqueirozdf/lab-apps2.git
+          targetRevision: HEAD 
+        destination:
+          namespace: thanos
+          server: https://kubernetes.default.svc
+        syncPolicy:
+          automated:
+            prune: true
+            selfHeal: true
