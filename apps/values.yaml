@@ -7,7 +7,7 @@ clusterK8s:
       server: https://kubernetes.default.svc  
 
 argocd:
-  namespace: argocd-2
+  namespace: argocd
   disablePrune: false
 
 # #####################################################################
