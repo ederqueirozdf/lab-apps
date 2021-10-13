@@ -15,7 +15,7 @@ argocd:
 # #####################################################################
 
   apps:
-    - name: "guestbook2"
+    - name: "guestbook"
       finalizers: []
       labels: []
         # - key: chave
@@ -27,7 +27,7 @@ argocd:
         project: k8s-lab
         source:
           path: guestbook
-          repoURL: https://github.com/ederqueirozdf/lab-apps2.git
+          repoURL: https://github.com/ederqueirozdf/lab-apps.git
           targetRevision: HEAD     
         destination:
           namespace: guestbook2
@@ -53,7 +53,7 @@ argocd:
         project: k8s-lab
         source:
           path: thanos
-          repoURL: https://github.com/ederqueirozdf/lab-apps2.git
+          repoURL: https://github.com/ederqueirozdf/lab-apps.git
           targetRevision: HEAD 
         destination:
           namespace: thanos
