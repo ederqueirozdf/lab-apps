@@ -129,7 +129,12 @@ query:
     sidecarsNamespace: ""
   ## @param query.stores Statically configure store APIs to connect with Thanos Query
   ##
-  stores: []
+  stores:
+  #  - "dnssrv+_grpc._tcp.k8s-lab-prometheus-master-0-server.prometheus-master-0.svc.cluster.local"
+
+  # thanos-rule
+   - "dnssrv+_grpc._tcp.k8s-lab-thanos-infra-ruler.thanos.svc.cluster.local"
+   - "dnssrv+_grpc._tcp.k8s-lab-thanos-infra-storegateway.thanos.svc.cluster.local"  
   ## @param query.sdConfig Query Service Discovery Configuration
   ## Specify content for servicediscovery.yml
   ##
@@ -137,7 +142,7 @@ query:
   ## @param query.existingSDConfigmap Name of existing ConfigMap with Ruler configuration
   ## NOTE: This will override query.sdConfig
   ##
-  existingSDConfigmap: ""
+  existingSDConfigmap: "thanos-lab-rules"
   ## @param query.extraContainers Extra containers running as sidecars to Thanos query
   ## Example:
   ## - name: oAuth2-proxy
@@ -1892,7 +1897,11 @@ storegateway:
 ruler:
   ## @param ruler.enabled Enable/disable Thanos Ruler component
   ##
-  enabled: false
+  enabled: true
+
+  queries: 
+  - "dnssrv+_grpc._tcp.k8s-lab-thanos-query.thanos.svc.cluster.local"
+
   ## @param ruler.logLevel Thanos Ruler log level
   ##
   logLevel: info
@@ -1916,7 +1925,7 @@ ruler:
   ## @param ruler.dnsDiscovery.enabled Dynamically configure Query APIs using DNS discovery
   ##
   dnsDiscovery:
-    enabled: true
+    enabled: false
   ## @param ruler.alertmanagers Alermanager URLs array
   ##
   alertmanagers: []
