@@ -3,3 +3,4 @@ dnsservice:
   urls:     
     - thanos-1.CGTI.cluster.local
     - thanos-rule-1.CGTI.cluster.local
+    - thanos-bucket-1.CGTI.cluster.local

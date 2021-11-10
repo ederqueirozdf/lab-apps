@@ -1,11 +1,16 @@
 dependencies:
-  - name: k8s-namespaces
-    version: 0.2.0
-    repository: http://chartmuseum.devops.cluster.local:30001/bb/CGTI/
   - name: service-external-name
     version: 0.1.0
-    repository: http://chartmuseum.devops.cluster.local:30001/bb/CGTI/
-  - name: dnsservice     
-    version: 0.1.1     
-    repository: https://chartmuseum.devops.cluster.local/bb/infra     
+    repository: http://chartmuseum.devops.cluster.local:30001/infra.local/CGTI/
+  - name: common
+    repository: http://chartmuseum.devops.cluster.local:30001/infra.local/CGTI/
+    tags:
+      - bitnami-common
+    version: 1.8.0
+  - name: k8s-namespaces
+    version: 0.2.0
+    repository: http://chartmuseum.devops.cluster.local:30001/infra.local/CGTI/
+  - name: dnsservice
+    version: 0.1.1
+    repository: https://chartmuseum.devops.cluster.local/infra.local/catalogo
     condition: dnsservice.enabled    

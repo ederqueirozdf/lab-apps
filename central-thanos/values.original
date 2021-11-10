@@ -8,24 +8,23 @@
 ## @param global.storageClass Global StorageClass for Persistent Volume(s)
 ##
 global:
-  imageRegistry: "atf.intranet.infra.local.com.br:5001"
-  #atf.intranet.infra.local.com.br:5001/infra.local/CGTI/thanos/thanos:0.22.0-scratch-r2
+  imageRegistry: ""
   ## E.g.
   ## imagePullSecrets:
   ##   - myRegistryKeySecretName
   ##
   imagePullSecrets: []
-  storageClass: "nas-client"
+  storageClass: ""
 
 ## @section Common parameters
 
 ## @param kubeVersion Force target Kubernetes version (using Helm capabilities if not set)
 ##
-kubeVersion: "v1.18.16"
-## @param nameOverride String to partially override thanos.name template (will maintain the release name)
+kubeVersion: ""
+## @param nameOverride String to partially override common.names.fullname template (will maintain the release name)
 ##
 nameOverride: ""
-## @param fullnameOverride String to fully override thanos.name template
+## @param fullnameOverride String to fully override common.names.fullname template
 ##
 fullnameOverride: ""
 ## @param commonLabels Add labels to all the deployed resources
@@ -33,7 +32,7 @@ fullnameOverride: ""
 commonLabels: {}
 ## @param clusterDomain Kubernetes Cluster Domain
 ##
-clusterDomain: ""
+clusterDomain: cluster.local
 
 ## @section Thanos common parameters
 
@@ -46,8 +45,8 @@ clusterDomain: ""
 ## @param image.pullSecrets Specify docker-registry secret names as an array
 ##
 image:
-  registry: atf.intranet.infra.local.com.br:5001
-  repository: infra.local/CGTI/thanos/thanos
+  registry: docker.io
+  repository: bitnami/thanos
   tag: 0.22.0-scratch-r2
   ## Specify a imagePullPolicy. Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -61,7 +60,10 @@ image:
   ##   - myRegistryKeySecretName
   ##
   pullSecrets: []
-
+## @param objstoreConfig The [objstore configuration](https://thanos.io/storage.md/)
+## Specify content for objstore.yml
+##
+objstoreConfig: ""
 ## @param indexCacheConfig The [index cache configuration](https://thanos.io/components/store.md/)
 ## Specify content for index-cache.yml
 ##
@@ -106,13 +108,13 @@ query:
   hostAliases: []
   ## @param query.replicaLabel Replica indicator(s) along which data is deduplicated
   ##
-  replicaLabel: prometheus_replica
+  replicaLabel: [replica]
   ## Dynamically configure store APIs using DNS discovery
   ##
   dnsDiscovery:
     ## @param query.dnsDiscovery.enabled Enable store APIs discovery via DNS
     ##
-    enabled: false
+    enabled: true
     ## @param query.dnsDiscovery.sidecarsService Sidecars service name to discover them using DNS discovery
     ## Evaluated as a template.
     ## e.g:
@@ -127,236 +129,7 @@ query:
     sidecarsNamespace: ""
   ## @param query.stores Statically configure store APIs to connect with Thanos Query
   ##
-  stores:
-   # k8s-desenv
-   - "metrics.k8s-desenv.cluster.local:30910"
-   - "metrics.k8s-desenv.cluster.local:30911"
-   - "metrics.k8s-desenv.cluster.local:30912"
-   - "metrics.k8s-desenv.cluster.local:30913"
-   - "metrics.k8s-desenv.cluster.local:30914"
-   - "metrics.k8s-desenv.cluster.local:30915"
-   - "metrics.k8s-desenv.cluster.local:30921"
-   - "metrics.k8s-desenv.cluster.local:30922"
-   - "metrics.k8s-desenv.cluster.local:30923"
-   - "metrics.k8s-desenv.cluster.local:30924"
-   - "metrics.k8s-desenv.cluster.local:30925"
-   # k8s-data-des
-   - "metrics.k8s-data-des.cluster.local:30910"
-   - "metrics.k8s-data-des.cluster.local:30911"
-   - "metrics.k8s-data-des.cluster.local:30912"
-   - "metrics.k8s-data-des.cluster.local:30913"
-   - "metrics.k8s-data-des.cluster.local:30914"
-   - "metrics.k8s-data-des.cluster.local:30915"
-   - "metrics.k8s-data-des.cluster.local:30921"
-   - "metrics.k8s-data-des.cluster.local:30922"
-   - "metrics.k8s-data-des.cluster.local:30923"
-   - "metrics.k8s-data-des.cluster.local:30924"
-   - "metrics.k8s-data-des.cluster.local:30925"
-   # k8s-apps-des
-   - "metrics.k8s-apps-des.cluster.local:30910"
-   - "metrics.k8s-apps-des.cluster.local:30911"
-   - "metrics.k8s-apps-des.cluster.local:30912"
-   - "metrics.k8s-apps-des.cluster.local:30913"
-   - "metrics.k8s-apps-des.cluster.local:30914"
-   - "metrics.k8s-apps-des.cluster.local:30915"
-   - "metrics.k8s-apps-des.cluster.local:30921"
-   - "metrics.k8s-apps-des.cluster.local:30922"
-   - "metrics.k8s-apps-des.cluster.local:30923"
-   - "metrics.k8s-apps-des.cluster.local:30924"
-   - "metrics.k8s-apps-des.cluster.local:30925"
-   # k8s-homologacao
-   - "metrics.cluster.local:30910"
-   - "metrics.cluster.local:30911"
-   - "metrics.cluster.local:30912"
-   - "metrics.cluster.local:30913"
-   - "metrics.cluster.local:30914"
-   - "metrics.cluster.local:30915"
-   - "metrics.cluster.local:30921"
-   - "metrics.cluster.local:30922"
-   - "metrics.cluster.local:30923"
-   - "metrics.cluster.local:30924"
-   - "metrics.cluster.local:30925"
-   # k8s-data-hml
-   - "metrics.data.cluster.local:30910"
-   - "metrics.data.cluster.local:30911"
-   - "metrics.data.cluster.local:30912"
-   - "metrics.data.cluster.local:30913"
-   - "metrics.data.cluster.local:30914"
-   - "metrics.data.cluster.local:30915"
-   - "metrics.data.cluster.local:30921"
-   - "metrics.data.cluster.local:30922"
-   - "metrics.data.cluster.local:30923"
-   - "metrics.data.cluster.local:30924"
-   - "metrics.data.cluster.local:30925"
-   # k8s-apps-hml
-   - "metrics.apps.cluster.local:30910"
-   - "metrics.apps.cluster.local:30911"
-   - "metrics.apps.cluster.local:30912"
-   - "metrics.apps.cluster.local:30913"
-   - "metrics.apps.cluster.local:30914"
-   - "metrics.apps.cluster.local:30915"
-   - "metrics.apps.cluster.local:30921"
-   - "metrics.apps.cluster.local:30922"
-   - "metrics.apps.cluster.local:30923"
-   - "metrics.apps.cluster.local:30924"
-   - "metrics.apps.cluster.local:30925"
-   # k8s-data-prd
-   - "metrics.data.cluster.local:30910"
-   - "metrics.data.cluster.local:30911"
-   - "metrics.data.cluster.local:30912"
-   - "metrics.data.cluster.local:30913"
-   - "metrics.data.cluster.local:30914"
-   - "metrics.data.cluster.local:30915"
-   - "metrics.data.cluster.local:30921"
-   - "metrics.data.cluster.local:30922"
-   - "metrics.data.cluster.local:30923"
-   - "metrics.data.cluster.local:30924"
-   - "metrics.data.cluster.local:30925"
-   # k8s-canais-prd
-   - "metrics.canais.cluster.local:30910"
-   - "metrics.canais.cluster.local:30911"
-   - "metrics.canais.cluster.local:30912"
-   - "metrics.canais.cluster.local:30913"
-   - "metrics.canais.cluster.local:30914"
-   - "metrics.canais.cluster.local:30915"
-   - "metrics.canais.cluster.local:30921"
-   - "metrics.canais.cluster.local:30922"
-   - "metrics.canais.cluster.local:30923"
-   - "metrics.canais.cluster.local:30924"
-   - "metrics.canais.cluster.local:30925"
-   # k8s-devops
-   - "metrics.k8s-devops.cluster.local:30910"
-   - "metrics.k8s-devops.cluster.local:30911"
-   - "metrics.k8s-devops.cluster.local:30912"
-   - "metrics.k8s-devops.cluster.local:30913"
-   - "metrics.k8s-devops.cluster.local:30914"
-   - "metrics.k8s-devops.cluster.local:30915"
-   - "metrics.k8s-devops.cluster.local:30921"
-   - "metrics.k8s-devops.cluster.local:30922"
-   - "metrics.k8s-devops.cluster.local:30923"
-   - "metrics.k8s-devops.cluster.local:30924"
-   - "metrics.k8s-devops.cluster.local:30925"
-   # k8s-automacao
-   - "metrics.automacao.cluster.local:30910"
-   - "metrics.automacao.cluster.local:30911"
-   - "metrics.automacao.cluster.local:30912"
-   - "metrics.automacao.cluster.local:30913"
-   - "metrics.automacao.cluster.local:30914"
-   - "metrics.automacao.cluster.local:30915"
-   - "metrics.automacao.cluster.local:30921"
-   - "metrics.automacao.cluster.local:30922"
-   - "metrics.automacao.cluster.local:30923"
-   - "metrics.automacao.cluster.local:30924"
-   - "metrics.automacao.cluster.local:30925"
-   # k8s-devops-infra
-   - "metrics.k8s-devops-infra.cluster.local:30910"
-   - "metrics.k8s-devops-infra.cluster.local:30911"
-   - "metrics.k8s-devops-infra.cluster.local:30912"
-   - "metrics.k8s-devops-infra.cluster.local:30913"
-   - "metrics.k8s-devops-infra.cluster.local:30914"
-   - "metrics.k8s-devops-infra.cluster.local:30915"
-   - "metrics.k8s-devops-infra.cluster.local:30921"
-   - "metrics.k8s-devops-infra.cluster.local:30922"
-   - "metrics.k8s-devops-infra.cluster.local:30923"
-   - "metrics.k8s-devops-infra.cluster.local:30924"
-   - "metrics.k8s-devops-infra.cluster.local:30925"
-   # k8s-spi-prd
-   - "metrics.spi.cluster.local:30910"
-   - "metrics.spi.cluster.local:30911"
-   - "metrics.spi.cluster.local:30912"
-   - "metrics.spi.cluster.local:30913"
-   - "metrics.spi.cluster.local:30914"
-   - "metrics.spi.cluster.local:30915"
-   - "metrics.spi.cluster.local:30921"
-   - "metrics.spi.cluster.local:30922"
-   - "metrics.spi.cluster.local:30923"
-   - "metrics.spi.cluster.local:30924"
-   - "metrics.spi.cluster.local:30925"
-# # k8s-spi-prd-dr
-#   - "metrics.k8s-spi-prd-dr.cluster.local:30910"
-#   - "metrics.k8s-spi-prd-dr.cluster.local:30911"
-#   - "metrics.k8s-spi-prd-dr.cluster.local:30912"
-#   - "metrics.k8s-spi-prd-dr.cluster.local:30913"
-#   - "metrics.k8s-spi-prd-dr.cluster.local:30914"
-#   - "metrics.k8s-spi-prd-dr.cluster.local:30915"
-#   - "metrics.k8s-spi-prd-dr.cluster.local:30921"
-#   - "metrics.k8s-spi-prd-dr.cluster.local:30922"
-#   - "metrics.k8s-spi-prd-dr.cluster.local:30923"
-#   - "metrics.k8s-spi-prd-dr.cluster.local:30924"
-#   - "metrics.k8s-spi-prd-dr.cluster.local:30925"
-   # k8s-servicos
-   - "metrics.svc.cluster.local:30910"
-   - "metrics.svc.cluster.local:30911"
-   - "metrics.svc.cluster.local:30912"
-   - "metrics.svc.cluster.local:30913"
-   - "metrics.svc.cluster.local:30914"
-   - "metrics.svc.cluster.local:30915"
-   - "metrics.svc.cluster.local:30921"
-   - "metrics.svc.cluster.local:30922"
-   - "metrics.svc.cluster.local:30923"
-   - "metrics.svc.cluster.local:30924"
-   - "metrics.svc.cluster.local:30925"
-   # k8s-deploy
-   - "metrics.deploy.cluster.local:30910"
-   - "metrics.deploy.cluster.local:30911"
-   - "metrics.deploy.cluster.local:30912"
-   - "metrics.deploy.cluster.local:30913"
-   - "metrics.deploy.cluster.local:30914"
-   - "metrics.deploy.cluster.local:30915"
-   - "metrics.deploy.cluster.local:30921"
-   - "metrics.deploy.cluster.local:30922"
-   - "metrics.deploy.cluster.local:30923"
-   - "metrics.deploy.cluster.local:30924"
-   - "metrics.deploy.cluster.local:30925"
-   # k8s-bigdata
-   - "metrics.bg.cluster.local:30910"
-   - "metrics.bg.cluster.local:30911"
-   - "metrics.bg.cluster.local:30912"
-   - "metrics.bg.cluster.local:30913"
-   - "metrics.bg.cluster.local:30914"
-   - "metrics.bg.cluster.local:30915"
-   - "metrics.bg.cluster.local:30921"
-   - "metrics.bg.cluster.local:30922"
-   - "metrics.bg.cluster.local:30923"
-   - "metrics.bg.cluster.local:30924"
-   - "metrics.bg.cluster.local:30925"
-   # k8s-monitor
-   - "metrics.k8s-monitor.cluster.local:30910"
-   - "metrics.k8s-monitor.cluster.local:30911"
-   - "metrics.k8s-monitor.cluster.local:30912"
-   - "metrics.k8s-monitor.cluster.local:30913"
-   - "metrics.k8s-monitor.cluster.local:30914"
-   - "metrics.k8s-monitor.cluster.local:30915"
-   - "metrics.k8s-monitor.cluster.local:30921"
-   - "metrics.k8s-monitor.cluster.local:30922"
-   - "metrics.k8s-monitor.cluster.local:30923"
-   - "metrics.k8s-monitor.cluster.local:30924"
-   - "metrics.k8s-monitor.cluster.local:30925"
-# k8s-svc-ext-ibm01
-#   - "metrics.k8s-svc-ext-ibm01.ibm.cluster.local:30910"
-#   - "metrics.k8s-svc-ext-ibm01.ibm.cluster.local:30911"
-#   - "metrics.k8s-svc-ext-ibm01.ibm.cluster.local:30912"
-#   - "metrics.k8s-svc-ext-ibm01.ibm.cluster.local:30913"
-#   - "metrics.k8s-svc-ext-ibm01.ibm.cluster.local:30914"
-#   - "metrics.k8s-svc-ext-ibm01.ibm.cluster.local:30921"
-#   - "metrics.k8s-svc-ext-ibm01.ibm.cluster.local:30922"
-#   - "metrics.k8s-svc-ext-ibm01.ibm.cluster.local:30923"
-#   - "metrics.k8s-svc-ext-ibm01.ibm.cluster.local:30924"
-   # k8s-apps-prd
-   - "metrics.k8s-apps-prd.cluster.local:30910"
-   - "metrics.k8s-apps-prd.cluster.local:30911"
-   - "metrics.k8s-apps-prd.cluster.local:30912"
-   - "metrics.k8s-apps-prd.cluster.local:30913"
-   - "metrics.k8s-apps-prd.cluster.local:30914"
-   - "metrics.k8s-apps-prd.cluster.local:30915"
-   - "metrics.k8s-apps-prd.cluster.local:30921"
-   - "metrics.k8s-apps-prd.cluster.local:30922"
-   - "metrics.k8s-apps-prd.cluster.local:30923"
-   - "metrics.k8s-apps-prd.cluster.local:30924"
-   - "metrics.k8s-apps-prd.cluster.local:30925"
-   # thanos-rule
-   - "dnssrv+_grpc._tcp.kmo-central-thanos-rule-grpc.CGTI-central-thanos.svc.cluster.local"
-  #
+  stores: []
   ## @param query.sdConfig Query Service Discovery Configuration
   ## Specify content for servicediscovery.yml
   ##
@@ -449,22 +222,15 @@ query:
   ## @param query.nodeSelector Thanos Query node labels for pod assignment
   ## ref: https://kubernetes.io/docs/user-guide/node-selection/
   ##
-  nodeSelector:
-    node.k8s.infra.local/servico: "metrics"
+  nodeSelector: {}
   ## @param query.tolerations Thanos Query tolerations for pod assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
   ##
-  tolerations:
-    - key: "node.k8s.infra.local/servico"
-      operator: "Equal"
-      value: "metrics"
-      effect: "NoSchedule" 
+  tolerations: []
   ## @param query.podLabels Thanos Query pod labels
   ## Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
   ##
-  podLabels:
-   servico: metrics
-   thanos: central
+  podLabels: {}
   ## @param query.podAnnotations Annotations for Thanos Query pods
   ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
   ##
@@ -512,22 +278,16 @@ query:
   ## @param query.resources.requests The requested resources for the Thanos Query container
   ##
   resources:
-    limits:
-      cpu: 2000m
-      memory: 16Gi
-    requests:
-      cpu: 1000m
-      memory: 1Gi
     ## Example:
     ## limits:
     ##    cpu: 100m
     ##    memory: 128Mi
-    # limits: {}
+    limits: {}
     ## Examples:
     ## requests:
     ##    cpu: 100m
     ##    memory: 128Mi
-    # requests: {}
+    requests: {}
   ## Thanos Query pods' liveness probe. Evaluated as a template.
   ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
   ## @param query.livenessProbe.enabled Enable livenessProbe
@@ -706,21 +466,20 @@ query:
   ingress:
     ## @param query.ingress.enabled Enable ingress controller resource
     ##
-    enabled: true
+    enabled: false
     ## @param query.ingress.certManager Set this to true in order to add the corresponding annotations for cert-manager
     ##
     certManager: false
     ## @param query.ingress.hostname Default host for the ingress resource
     ##
-    hostname: thanos-1.CGTI.cluster.local
+    hostname: thanos.local
     ## @param query.ingress.annotations Ingress annotations
     ## For a full list of possible ingress annotations, please see
     ## ref: https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md
     ##
     ## If certManager is set to true, annotation kubernetes.io/tls-acme: "true" will automatically be set
     ##
-    annotations:
-        kubernetes.io/ingress.class: nginx
+    annotations: {}
     ## @param query.ingress.extraHosts The list of additional hostnames to be covered with this ingress record.
     ## Most likely the hostname above will be enough, but in the event more hosts are needed, this is an array
     ## extraHosts:
@@ -764,7 +523,7 @@ query:
     path: /
     ## @param query.ingress.pathType Ingress path type
     ##
-    pathType: ""
+    pathType: ImplementationSpecific
     ## Create an ingress object for the GRPC service. This requires an HTTP/2
     ## capable Ingress controller (eg. traefik using AWS NLB). Example annotations
     ## - ingress.kubernetes.io/protocol: h2c
@@ -784,7 +543,7 @@ query:
       certManager: false
       ## @param query.ingress.grpc.hostname Default host for the ingress resource (GRPC)
       ##
-      hostname: thanos-1-grpc.CGTI.cluster.local
+      hostname: thanos-grpc.local
       ## @param query.ingress.grpc.annotations Ingress annotations (GRPC)
       ##
       annotations: {}
@@ -826,14 +585,14 @@ query:
       path: /
       ## @param query.ingress.grpc.pathType Ingress Path type
       ##
-      pathType: ""
+      pathType: ImplementationSpecific
 
 ## @section Thanos Query Frontend parameters
 
 queryFrontend:
   ## @param queryFrontend.enabled Enable/disable Thanos Query Frontend component
   ##
-  enabled: false
+  enabled: true
   ## @param queryFrontend.logLevel Thanos Query Frontend log level
   ##
   logLevel: info
@@ -951,9 +710,7 @@ queryFrontend:
   ## @param queryFrontend.podLabels Thanos Query Frontend pod labels
   ## Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
   ##
-  podLabels:
-   servico: metrics
-   thanos: central
+  podLabels: {}
   ## @param queryFrontend.podAnnotations Annotations for Thanos Query Frontend pods
   ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
   ##
@@ -1175,14 +932,14 @@ queryFrontend:
     path: /
     ## @param queryFrontend.ingress.pathType Ingress path type
     ##
-    pathType: ""
+    pathType: ImplementationSpecific
 
 ## @section Thanos Bucket Web parameters
 
 bucketweb:
   ## @param bucketweb.enabled Enable/disable Thanos Bucket Web component
   ##
-  enabled: true
+  enabled: false
   ## @param bucketweb.logLevel Thanos Bucket Web log level
   ##
   logLevel: info
@@ -1290,22 +1047,15 @@ bucketweb:
   ## @param bucketweb.nodeSelector Thanos Bucket Web node labels for pod assignment
   ## ref: https://kubernetes.io/docs/user-guide/node-selection/
   ##
-  nodeSelector:
-    node.k8s.infra.local/servico: "metrics"
+  nodeSelector: {}
   ## @param bucketweb.tolerations Thanos Bucket Web tolerations for pod assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
   ##
-  tolerations:
-    - key: "node.k8s.infra.local/servico"
-      operator: "Equal"
-      value: "metrics"
-      effect: "NoSchedule"  
+  tolerations: []
   ## @param bucketweb.podLabels Thanos Bucket Web pod labels
   ## Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
   ##
-  podLabels:
-   servico: metrics
-   thanos: central  
+  podLabels: {}
   ## @param bucketweb.podAnnotations Annotations for Thanos Bucket Web pods
   ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
   ##
@@ -1346,12 +1096,16 @@ bucketweb:
   ## @param bucketweb.resources.requests The requested resources for the Thanos Bucket Web container
   ##
   resources:
-    limits:
-      cpu: 2000m
-      memory: 16Gi
-    requests:
-      cpu: 1000m
-      memory: 4Gi
+    ## Example:
+    ## limits:
+    ##    cpu: 100m
+    ##    memory: 128Mi
+    limits: {}
+    ## Examples:
+    ## requests:
+    ##    cpu: 100m
+    ##    memory: 128Mi
+    requests: {}
   ## Thanos Bucket Web pods' liveness probe. Evaluated as a template.
   ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
   ## @param bucketweb.livenessProbe.enabled Enable livenessProbe
@@ -1445,13 +1199,13 @@ bucketweb:
   ingress:
     ## @param bucketweb.ingress.enabled Enable ingress controller resource
     ##
-    enabled: true
+    enabled: false
     ## @param bucketweb.ingress.certManager Add annotations for cert-manager
     ##
     certManager: false
     ## @param bucketweb.ingress.hostname Default host for the ingress resource
     ##
-    hostname: thanos-1-bucket.CGTI.cluster.local
+    hostname: thanos-bucketweb.local
     ## @param bucketweb.ingress.annotations Ingress annotations
     ## For a full list of possible ingress annotations, please see
     ## ref: https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md
@@ -1502,14 +1256,14 @@ bucketweb:
     path: /
     ## @param bucketweb.ingress.pathType Ingress path type
     ##
-    pathType: ""
+    pathType: ImplementationSpecific
 
 ## @section Thanos Compactor parameters
 
 compactor:
   ## @param compactor.enabled Enable/disable Thanos Compactor component
   ##
-  enabled: true
+  enabled: false
   ## @param compactor.logLevel Thanos Compactor log level
   ##
   logLevel: info
@@ -1532,9 +1286,9 @@ compactor:
   ## @param compactor.retentionResolution5m Resolution and Retention flag
   ## @param compactor.retentionResolution1h Resolution and Retention flag
   ##
-  retentionResolutionRaw: 7d
-  retentionResolution5m: 14d
-  retentionResolution1h: 30d
+  retentionResolutionRaw: 30d
+  retentionResolution5m: 30d
+  retentionResolution1h: 10y
   ## @param compactor.consistencyDelay Minimum age of fresh (non-compacted) blocks before they are being processed
   ##
   consistencyDelay: 30m
@@ -1558,8 +1312,7 @@ compactor:
   extraVolumeMounts: []
   ## @param compactor.extraFlags Extra Flags to passed to Thanos Compactor
   ##
-  extraFlags:
-  - --delete-delay=48h
+  extraFlags: []
   ## @param compactor.strategyType Deployment Strategy Type, can be set to RollingUpdate or Recreate by default
   ##
   strategyType: RollingUpdate
@@ -1598,22 +1351,15 @@ compactor:
   ## @param compactor.nodeSelector Thanos Compactor node labels for pod assignment
   ## ref: https://kubernetes.io/docs/user-guide/node-selection/
   ##
-  nodeSelector:
-    node.k8s.infra.local/servico: "metrics"
+  nodeSelector: {}
   ## @param compactor.tolerations Thanos Compactor tolerations for pod assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
   ##
-  tolerations:
-    - key: "node.k8s.infra.local/servico"
-      operator: "Equal"
-      value: "metrics"
-      effect: "NoSchedule"   
+  tolerations: []
   ## @param compactor.podLabels Thanos Compactor pod labels
   ## Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
   ##
-  podLabels:
-   servico: metrics
-   thanos: central
+  podLabels: {}
   ## @param compactor.podAnnotations Annotations for Thanos Compactor pods
   ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
   ##
@@ -1654,12 +1400,16 @@ compactor:
   ## @param compactor.resources.requests The requested resources for the Thanos Compactor container
   ##
   resources:
-    limits:
-      cpu: 2000m
-      memory: 16Gi
-    requests:
-      cpu: 1000m
-      memory: 1Gi
+    ## Example:
+    ## limits:
+    ##    cpu: 100m
+    ##    memory: 128Mi
+    limits: {}
+    ## Examples:
+    ## requests:
+    ##    cpu: 100m
+    ##    memory: 128Mi
+    requests: {}
   ## Thanos Compactor pods' liveness probe. Evaluated as a template.
   ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
   ## @param compactor.livenessProbe.enabled Enable livenessProbe
@@ -1750,21 +1500,21 @@ compactor:
     ## If undefined (the default) or set to null, no storageClassName spec is
     ## set, choosing the default provisioner.
     ##
-    storageClass: "nas-client"
+    storageClass: ""
     ## @param compactor.persistence.accessModes Access modes of data volume
     ##
     accessModes:
-      - ReadWriteMany
+      - ReadWriteOnce
     ## @param compactor.persistence.size Size of data volume
     ##
-    size: 50Gi
+    size: 8Gi
 
 ## @section Thanos Store Gateway parameters
 
 storegateway:
   ## @param storegateway.enabled Enable/disable Thanos Store Gateway component
   ##
-  enabled: true
+  enabled: false
   ## @param storegateway.logLevel Thanos Store Gateway log level
   ##
   logLevel: info
@@ -1894,8 +1644,7 @@ storegateway:
   ## If you have set storegateway.sharded.enabled: true you can set shardLoopId (or any other parameter) by setting the below code block under this 'nodeSelector' section:
   ## nodeSelector: { shardId: "{{ .shardLoopId }}" }
   ##
-  nodeSelector:
-    node.k8s.infra.local/servico: "metrics"  
+  nodeSelector: {}
   ## @param storegateway.tolerations Thanos Store Gateway tolerations for pod assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
   ## If you have set storegateway.sharded.enabled: true you can set shardLoopId (or any other parameter) by setting the below code block under this 'nodeSelector' section:
@@ -1906,17 +1655,11 @@ storegateway:
   ##   effect: "NoSchedule"
   ##
   ##
-  tolerations:
-    - key: "node.k8s.infra.local/servico"
-      operator: "Equal"
-      value: "metrics"
-      effect: "NoSchedule"  
+  tolerations: []
   ## @param storegateway.podLabels Thanos Store Gateway pod labels
   ## Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
   ##
-  podLabels:
-   servico: metrics
-   thanos: central
+  podLabels: {}
   ## @param storegateway.podAnnotations Annotations for Thanos Store Gateway pods
   ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
   ##
@@ -1957,22 +1700,16 @@ storegateway:
   ## @param storegateway.resources.requests The requested resources for the Thanos Store Gateway container
   ##
   resources:
-    limits:
-      cpu: 2000m
-      memory: 16Gi
-    requests:
-      cpu: 1000m
-      memory: 1Gi  
-    # ## Example:
-    # ## limits:
-    # ##    cpu: 100m
-    # ##    memory: 128Mi
-    # limits: {}
-    # ## Examples:
-    # ## requests:
-    # ##    cpu: 100m
-    # ##    memory: 128Mi
-    # requests: {}
+    ## Example:
+    ## limits:
+    ##    cpu: 100m
+    ##    memory: 128Mi
+    limits: {}
+    ## Examples:
+    ## requests:
+    ##    cpu: 100m
+    ##    memory: 128Mi
+    requests: {}
   ## Thanos Store Gateway pods' liveness probe. Evaluated as a template.
   ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
   ## @param storegateway.livenessProbe.enabled Enable livenessProbe
@@ -2010,7 +1747,7 @@ storegateway:
   service:
     ## @param storegateway.service.type Kubernetes service type
     ##
-    type: NodePort
+    type: ClusterIP
     ## @param storegateway.service.clusterIP Thanos Store Gateway service clusterIP IP
     ## e.g:
     ## clusterIP: None
@@ -2033,7 +1770,7 @@ storegateway:
       ## Specify the nodePort value for the LoadBalancer and NodePort service types
       ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
       ##
-      nodePort: "30910"
+      nodePort: ""
     ## @param storegateway.service.loadBalancerIP Load balancer IP if service type is `LoadBalancer`
     ## Set the LoadBalancer service type to internal only
     ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
@@ -2076,14 +1813,14 @@ storegateway:
     ## If undefined (the default) or set to null, no storageClassName spec is
     ## set, choosing the default provisioner.
     ##
-    storageClass: "nas-client"
+    storageClass: ""
     ## @param storegateway.persistence.accessModes Access modes of data volume
     ##
     accessModes:
-      - ReadWriteMany
+      - ReadWriteOnce
     ## @param storegateway.persistence.size Size of data volume
     ##
-    size: 30Gi
+    size: 8Gi
   ## Autoscaling parameters
   ## @param storegateway.autoscaling.enabled Enable autoscaling for Thanos Store Gateway
   ## @param storegateway.autoscaling.minReplicas Minimum number of Thanos Store Gateway replicas
@@ -2155,18 +1892,16 @@ storegateway:
 ruler:
   ## @param ruler.enabled Enable/disable Thanos Ruler component
   ##
-  enabled: true
+  enabled: false
   ## @param ruler.logLevel Thanos Ruler log level
   ##
-  # queries:
-  
   logLevel: info
   ## @param ruler.logFormat Thanos Ruler log format
   ##
   logFormat: logfmt
   ## @param ruler.replicaLabel Label to treat as a replica indicator along which data is deduplicated
   ##
-  replicaLabel: prometheus_replica
+  replicaLabel: replica
   serviceAccount:
     ## @param ruler.serviceAccount.annotations Annotations for Thanos Ruler Service Account
     ##
@@ -2184,8 +1919,7 @@ ruler:
     enabled: true
   ## @param ruler.alertmanagers Alermanager URLs array
   ##
-  alertmanagers:
-    - "http://alertmanager-1.CGTI.cluster.local"
+  alertmanagers: []
   ## @param ruler.alertmanagersConfig Alertmanagers Configuration
   ##
   ## Creates a secret from the config which is then mounted to the pod
@@ -2251,8 +1985,7 @@ ruler:
   extraVolumeMounts: []
   ## @param ruler.extraFlags Extra Flags to passed to Thanos Ruler
   ##
-  extraFlags:
-  - --alert.query-url=http://thanos-1.CGTI.cluster.local
+  extraFlags: []
   ## @param ruler.config Ruler configuration
   ## Specify content for ruler.yml
   ##
@@ -2260,7 +1993,7 @@ ruler:
   ## @param ruler.existingConfigmap Name of existing ConfigMap with Ruler configuration
   ## NOTE: This will override ruler.config
   ##
-  existingConfigmap: "thanos-central-rules"
+  existingConfigmap: ""
   ## @param ruler.replicaCount Number of Thanos Ruler replicas to deploy
   ##
   replicaCount: 1
@@ -2306,22 +2039,15 @@ ruler:
   ## @param ruler.nodeSelector Thanos Ruler node labels for pod assignment
   ## ref: https://kubernetes.io/docs/user-guide/node-selection/
   ##
-  nodeSelector:
-    node.k8s.infra.local/servico: "metrics"
+  nodeSelector: {}
   ## @param ruler.tolerations Thanos Ruler tolerations for pod assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
   ##
-  tolerations:
-    - key: "node.k8s.infra.local/servico"
-      operator: "Equal"
-      value: "metrics"
-      effect: "NoSchedule" 
+  tolerations: []
   ## @param ruler.podLabels Thanos Ruler pod labels
   ## Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
   ##
-  podLabels:
-   servico: metrics
-   thanos: central
+  podLabels: {}
   ## @param ruler.podAnnotations Annotations for Thanos Ruler pods
   ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
   ##
@@ -2363,13 +2089,15 @@ ruler:
   ##
   resources:
     ## Example:
-    limits:
-       cpu: 2000m
-       memory: 16Gi
+    ## limits:
+    ##    cpu: 100m
+    ##    memory: 128Mi
+    limits: {}
     ## Examples:
-    requests:
-       cpu: 1000m
-       memory: 2Gi
+    ## requests:
+    ##    cpu: 100m
+    ##    memory: 128Mi
+    requests: {}
   ## Thanos Ruler pods' liveness probe. Evaluated as a template.
   ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
   ## @param ruler.livenessProbe.enabled Enable livenessProbe
@@ -2474,14 +2202,14 @@ ruler:
     ## If undefined (the default) or set to null, no storageClassName spec is
     ## set, choosing the default provisioner.
     ##
-    storageClass: "nas-client"
+    storageClass: ""
     ## @param ruler.persistence.accessModes Access modes of data volume
     ##
     accessModes:
-      - ReadWriteMany
+      - ReadWriteOnce
     ## @param ruler.persistence.size Size of data volume
     ##
-    size: 20Gi
+    size: 8Gi
   ## Ruler Pod Disruption Budget configuration
   ## ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
   ##
@@ -2501,21 +2229,20 @@ ruler:
   ingress:
     ## @param ruler.ingress.enabled Enable ingress controller resource
     ##
-    enabled: true
+    enabled: false
     ## @param ruler.ingress.certManager Add annotations for cert-manager
     ##
     certManager: false
     ## @param ruler.ingress.hostname Default host for the ingress resource
     ##
-    hostname: thanos-rule-1.CGTI.cluster.local
+    hostname: thanos-ruler.local
     ## @param ruler.ingress.annotations Ingress annotations
     ## For a full list of possible ingress annotations, please see
     ## ref: https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md
     ##
     ## If certManager is set to true, annotation kubernetes.io/tls-acme: "true" will automatically be set
     ##
-    annotations:
-      kubernetes.io/ingress.class: nginx
+    annotations: {}
     ## @param ruler.ingress.extraHosts The list of additional hostnames to be covered with this ingress record.
     ## Most likely the hostname above will be enough, but in the event more hosts are needed, this is an array
     ## extraHosts:
@@ -2555,7 +2282,7 @@ ruler:
     path: /
     ## @param ruler.ingress.pathType Ingress path type
     ##
-    pathType: ""
+    pathType: ImplementationSpecific
 
 ## @section Thanos Receive parameters
 
@@ -2577,7 +2304,7 @@ receive:
   replicationFactor: 1
   ## @param receive.replicaLabel Label to treat as a replica indicator along which data is deduplicated
   ##
-  replicaLabel: prometheus_replica
+  replicaLabel: replica
   serviceAccount:
     ## @param receive.serviceAccount.annotations Annotations for Thanos Receive Service Account
     ##
@@ -2588,14 +2315,14 @@ receive:
   ## @param receive.hostAliases Deployment pod host aliases
   ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
   ##
-  hostAliases:
+  hostAliases: []
   ## @param receive.config Receive Hashring configuration
   ## json formatted string and yaml allowed.
   ## Specify content for receive hashring
   ## e.g:
-  # config:
-  #   - endpoints:
-  #     - "127.0.0.1:10901"
+  ## config:
+  ##   - endpoints:
+  ##     - "127.0.0.1:10901"
   ##
   config: []
   ## @param receive.extraContainers Extra containers running as sidecars to Thanos Receive container
@@ -2640,8 +2367,7 @@ receive:
   extraVolumeMounts: []
   ## @param receive.extraFlags Extra Flags to passed to Thanos Receive
   ##
-  extraFlags:
-  - --label=receive_cluster="central-prd-1"
+  extraFlags: []
   ## @param receive.updateStrategyType Statefulset Update Strategy Type, can be set to RollingUpdate or OnDelete by default
   ##
   updateStrategyType: RollingUpdate
@@ -2695,9 +2421,7 @@ receive:
   ## @param receive.podLabels Thanos Receive pod labels
   ## Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
   ##
-  podLabels:
-   servico: metrics
-   thanos: central
+  podLabels: {}
   ## @param receive.podAnnotations Annotations for Thanos Ruler pods
   ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
   ##
@@ -2724,14 +2448,14 @@ receive:
   ##
   resources:
     ## Example:
-    limits:
-       cpu: 2000m
-       memory: 16Gi
+    ## limits:
+    ##    cpu: 100m
+    ##    memory: 128Mi
     limits: {}
-    # Examples:
-    requests:
-       cpu: 1000m
-       memory: 2Gi
+    ## Examples:
+    ## requests:
+    ##    cpu: 100m
+    ##    memory: 128Mi
     requests: {}
   ## Thanos Receive pods' liveness probe. Evaluated as a template.
   ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
@@ -2838,7 +2562,7 @@ receive:
       ## @param receive.service.grpc.nodePort Service GRPC node port
       ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
       ##
-      nodePort: "31901"
+      nodePort: ""
     remoteWrite:
       ## @param receive.service.remoteWrite.port Service remote write port
       ##
@@ -2900,14 +2624,14 @@ receive:
     ## If undefined (the default) or set to null, no storageClassName spec is
     ## set, choosing the default provisioner.
     ##
-    storageClass: "nas-client"
+    storageClass: ""
     ## @param receive.persistence.accessModes Access modes of data volume
     ##
     accessModes:
-      - ReadWriteMany
+      - ReadWriteOnce
     ## @param receive.persistence.size Size of data volume
     ##
-    size: 50Gi
+    size: 8Gi
   ## Receive Pod Disruption Budget configuration
   ## ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
   ##
@@ -2933,7 +2657,7 @@ receive:
     certManager: false
     ## @param receive.ingress.hostname When the ingress is enabled, a host pointing to this will be created
     ##
-    hostname: thanos-receive-1.CGTI.cluster.local
+    hostname: thanos-receive.local
     ## @param receive.ingress.annotations Ingress annotations done as key:value pairs
     ## For a full list of possible ingress annotations, please see
     ## ref: https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md
@@ -2983,7 +2707,7 @@ receive:
     path: /
     ## @param receive.ingress.pathType Ingress Path type
     ##
-    pathType: ""
+    pathType: ImplementationSpecific
 
 ## @section Metrics parameters
 
@@ -2992,7 +2716,7 @@ receive:
 metrics:
   ## @param metrics.enabled Enable the export of Prometheus metrics
   ##
-  enabled: true
+  enabled: false
   ## Prometheus Operator ServiceMonitor configuration
   ##
   serviceMonitor:
@@ -3041,7 +2765,7 @@ metrics:
     ##                description: No more than one Thanos Compact instance should be running at once. There are {{`{{`}}$value{{`}}`}} instances running.
     ##                runbook_url: https://github.com/thanos-io/thanos/tree/main/mixin/runbook.md#alert-name-thanoscompactmultiplerunning
     ##                summary: Thanos Compact has multiple instances running.
-    ##              expr: sum by (job) (up{job=~"{{ template "thanos.name" . }}-compact.*"}) > 1
+    ##              expr: sum by (job) (up{job=~"{{ template "common.names.fullname" . }}-compact.*"}) > 1
     ##              for: 5m
     ##              labels:
     ##                severity: warning
@@ -3064,8 +2788,8 @@ volumePermissions:
   ## @param volumePermissions.image.pullSecrets Specify docker-registry secret names as an array
   ##
   image:
-    registry: atf.intranet.infra.local.com.br:5001
-    repository: infra.local/CGTI/thanos/thanos
+    registry: docker.io
+    repository: bitnami/bitnami-shell
     tag: 10-debian-10-r159
     ## Specify a imagePullPolicy. Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
     ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -3098,17 +2822,3 @@ minio:
   ## @param minio.defaultBuckets Comma, semi-colon or space separated list of MinIO&reg; buckets to create
   ##
   defaultBuckets: 'thanos'
-
-## @param objstoreConfig The [objstore configuration](https://thanos.io/storage.md/)
-## Specify content for objstore.yml
-##
-objstoreConfig:
-  type: S3
-  config:
-    bucket: pns1CGTIdf013
-    endpoint: s3.servicos.infra.local.com.br
-    region: infra.local
-    access_key: 5Ldq6cdy2P9vY25D_71514_398Yt033hBQ2pRZn79a1_aS49DL1J8cut0Aw8t5r_Jk__6w64yw_aA_Hte8CY4r_eeCZs7ZffD3aOxx8e1_hEBnM_sm3rW5NYZYhK_xaS
-    secret_key: PtS7np_RN_68_dbkPVWEQH8Ba7XqSyZmE7jL9Tbtri2_44n041pc0f__VY3bP9H_wZ0gcr2Y7L4_urId_r_uC09_yJY_D7T_P7Y_sl49F39965R6dme1nDinfra.local4S_YOIjC
-    http_config: 
-      insecure_skip_verify: true

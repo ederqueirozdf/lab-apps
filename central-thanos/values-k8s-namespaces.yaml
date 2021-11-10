@@ -2,10 +2,10 @@ k8s-namespaces:
   release:
     deploy: argocd # argocd ou manual
     sigla: CGTI
-    git: https://fontes.intranet.infra.local/CGTI/CGTI_releases_k8s-devops-infra.git
+    git: https://fontes.intranet.infra.local.com.br/CGTI/CGTI_releases_k8s-devops-infra.git
   clusterK8s:
-    name: k8s-monitor
-    abbreviation: kdi
+    name: k8s-devops-infra
+    ainfra.localreviation: kdi
     api: https://kube-api.devops-infra.cluster.local:6443
 
   namespaces:
