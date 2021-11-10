@@ -1,0 +1,17 @@
+k8s-namespaces:
+  release:
+    deploy: argocd # argocd ou manual
+    sigla: CGTI
+    git: https://fontes.intranet.infra.local/CGTI/CGTI_releases_k8s-devops-infra.git
+  clusterK8s:
+    name: k8s-monitor
+    abbreviation: kdi
+    api: https://kube-api.devops-infra.cluster.local:6443
+
+  namespaces:
+    enabled: true
+    servicos: #o nome do namespace sera sigla + nome
+      - name: central-thanos
+        annotations:
+          - key: argocd.argoproj.io/hook
+            value: PreSync

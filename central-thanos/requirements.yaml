@@ -1,0 +1,11 @@
+dependencies:
+  - name: k8s-namespaces
+    version: 0.2.0
+    repository: http://chartmuseum.devops.cluster.local:30001/bb/CGTI/
+  - name: service-external-name
+    version: 0.1.0
+    repository: http://chartmuseum.devops.cluster.local:30001/bb/CGTI/
+  - name: dnsservice     
+    version: 0.1.1     
+    repository: https://chartmuseum.devops.cluster.local/bb/infra     
+    condition: dnsservice.enabled    

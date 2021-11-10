@@ -1,0 +1,5 @@
+dnsservice:   
+  enabled: true   
+  urls:     
+    - thanos-1.CGTI.cluster.local
+    - thanos-rule-1.CGTI.cluster.local

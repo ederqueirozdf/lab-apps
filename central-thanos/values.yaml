@@ -1,0 +1,1158 @@
+image:
+  repository: atf.intranet.infra.local:5001/bb/CGTI/thanos/thanos
+  tag: v0.15.0
+  pullPolicy: IfNotPresent
+
+store:
+  enabled: true
+  # Maximum size of items held in the index cache.
+  indexCacheSize: 250MB
+  # Maximum size of concurrently allocatable bytes for chunks.
+  chunkPoolSize: 2GB
+  # Maximum amount of samples returned via a single series call. 0 means no limit.
+  # NOTE: for efficiency we take 120 as the number of samples in chunk (it cannot be bigger than that),
+  # so the actual number of samples might be lower, even though the maximum could be hit.
+  grpcSeriesSampleLimit: 0
+  # Maximum number of concurrent Series calls.
+  grpcSeriesMaxConcurrency: 20
+  # Repeat interval for syncing the blocks between local and remote view.
+  syncBlockDuration: 3m
+  # Number of goroutines to use when syncing blocks from object storage.
+  blockSyncConcurrency: 20
+  # Log filtering level.
+  logLevel: info
+  # Log format to use. Possible options: logfmt or json.
+  logFormat: logfmt
+  # Add extra environment variables to store
+  extraEnv: []
+  # - name: ENV
+  #   value: value
+  #
+  # Add extra arguments to the store service
+  extraArgs: []
+  # - "--extraargs=extravalue"
+  #
+  # Number of replicas running from store component
+  replicaCount: 1
+  # Kubernetes deployment strategy object as documented in https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
+  strategy: {}
+  # Data volume for the thanos-store to store temporary data defaults to emptyDir
+  dataVolume:
+    backend: {}
+    #  persistentVolumeClaim:
+    #    claimName: store-data-volume
+  # Create the specified persistentVolumeClaim in case persistentVolumeClaim is
+  # used for the dataVolume.backend above and needs to be created.
+  # persistentVolumeClaim: {}
+  #  name: store-data-volume
+  #  spec:
+  #    storageClassName: ""
+  #    accessModes: ["ReadWriteOnce"]
+  #    resources:
+  #      requests:
+  #        storage: 100Gi
+  #    selector: {}
+  #    volumeName: ""
+  #    volumeMode: ""
+  # Extra labels for store pod template
+  persistentVolumeClaim: 
+    name: store-data-volume
+    spec:
+      storageClassName: "local-path"
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 30Gi
+      volumeMode: "Filesystem"
+
+  labels:
+   servico: metrics
+   thanos: central
+  #
+  # Extra annotations for store pod template
+  annotations: {}
+  #  example.com: default
+  #
+  # Add extra labels to store deployment
+  deploymentLabels: {}
+  #  extraLabel: extraLabelValue
+  #
+  # Add extra annotations to store deployment
+  deploymentAnnotations: {}
+  #  extraAnnotation: extraAnnotationValue
+  #
+  # Add extra selector matchLabels to store deployment
+  deploymentMatchLabels: {}
+  # Enable metrics collecting for store service
+  metrics:
+    # This is the Prometheus annotation type scraping configuration
+    annotations:
+      enabled: false
+    # Enable ServiceMonitor https://github.com/coreos/prometheus-operator
+    serviceMonitor:
+      enabled: false
+      # Labels for prometheus-operator to find servicemonitor
+      labels: {}
+  # The grpc endpoint to communicate with other components
+  grpc:
+    # grpc listen port number
+    port: 10901
+    # Service definition for query grpc service
+    service:
+      # Annotations to query grpc service
+      annotations: {}
+      # Labels to query grpc service
+      labels: {}
+    # Set up ingress for the grpc service
+    ingress:
+      enabled: false
+      # Set default backend for ingress
+      defaultBackend: false
+      annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+      labels: {}
+      path: "/"
+      hosts:
+        - "/"
+      tls: []
+      #  - secretName: chart-example-tls
+      #    hosts:
+      #      - chart-example.local
+
+  # The http endpoint to communicate with other components
+  http:
+    # http listen port number
+    port: 10902
+    # Service definition for query http service
+    service:
+      type: ClusterIP
+      # Annotations to query http service
+      annotations: {}
+      # Labels to query http service
+      labels: {}
+      # Match labels for service selector
+      matchLabels: {}
+    # Set up ingress for the http service
+    ingress:
+      enabled: false
+      # Set default backend for ingress
+      defaultBackend: false
+      annotations: {}
+        # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+      labels: {}
+      path: "/"
+      hosts:
+        - "/"
+      tls: []
+      #  - secretName: chart-example-tls
+      #    hosts:
+      #      - chart-example.local
+  # Optional securityContext
+  securityContext: {}
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 16Gi
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+  #
+  # Node tolerations for server scheduling to nodes with taints
+  # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  tolerations:
+    - key: "node.k8s.bb/servico"
+      operator: "Equal"
+      value: "metrics"
+      effect: "NoSchedule"  
+  #
+  # Node labels for store pod assignment
+  # Ref: https://kubernetes.io/docs/user-guide/node-selection/
+  #
+  nodeSelector: 
+    node.k8s.bb/servico: "metrics"
+  #
+  # Pod affinity
+  # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#node-affinity
+  affinity: {}
+  serviceAccount: ""
+  # set up store readinessProbe & livenessProbe
+  # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+  livenessProbe: {}
+  readinessProbe: {}
+  # Setting time timePartioning will create multipale store deployments based on the number of partions
+  # See https://thanos.io/components/store.md/#time-based-partioning
+  timePartioning:
+    - min: ""
+      max: ""
+  # Setting hashPartioning will create multiple store deployments based on the number of shards specified using the hashmod of the blocks
+  # See https://thanos.io/sharding.md/#relabelling
+  hashPartioning: {}
+    # shards:
+  # InitContainers allows injecting specialized containers that run before app containers. This is meant to pre-configure and tune mounted volume permissions.
+  initContainers: []
+query:
+  enabled: true
+  # Labels to treat as a replica indicator along which data is deduplicated.
+  # Still you will be able to query without deduplication using 'dedup=false' parameter.
+  # replicaLabels:
+  replicaLabels:
+  - prometheus_replica
+  # - prometheus
+  #
+  # Enable --query.auto-downsampling option for query.
+  autoDownsampling: false
+  # Prefix for API and UI endpoints. This allows thanos UI to be served on a sub-path.
+  # This option is analogous to --web.route-prefix of Promethus.
+  webRoutePrefix: ""
+  # Static prefix for all HTML links and redirect
+  #  URLs in the UI query web interface. Actual
+  #  endpoints are still served on / or the
+  #  web.route-prefix. This allows thanos UI to be
+  #  served behind a reverse proxy that strips a URL
+  #  sub-path.
+  webExternalPrefix: ""
+  # Name of HTTP request header used for dynamic prefixing of UI links and redirects.
+  # This option is ignored if web.external-prefix argument is set. Security risk: enable this
+  # option only if a reverse proxy in front of thanos is resetting the header. The --web.prefix-header=X-Forwarded-Prefix option
+  # can be useful, for example, if Thanos UI is served via Traefik reverse proxy with PathPrefixStrip option enabled, which sends the
+  # stripped prefix value in X-Forwarded-Prefix header. This allows thanos UI to be served on a sub-path
+  webPrefixHeader: ""
+  # https://github.com/improbable-eng/thanos/issues/1015
+  storeDNSResolver: miekgdns
+  # Enable DNS discovery for stores
+  storeDNSDiscovery: true
+  # Enable DNS discovery for sidecars (this is for the chart built-in sidecar service)
+  sidecarDNSDiscovery: true
+  # Enable DNS discovery for queries
+  ruleDNSDiscovery: false
+  # Addresses of statically configured store API servers (repeatable).
+  # The scheme may be prefixed with 'dns+' or 'dnssrv+' to detect store API servers through respective DNS lookups.
+  stores:
+# k8s-desenv
+   - "metrics.k8s-cluster.local:30910"
+   - "metrics.k8s-cluster.local:30911"
+   - "metrics.k8s-cluster.local:30912"
+   - "metrics.k8s-cluster.local:30913"
+   - "metrics.k8s-cluster.local:30914"
+   - "metrics.k8s-cluster.local:30915"
+   - "metrics.k8s-cluster.local:30921"
+   - "metrics.k8s-cluster.local:30922"
+   - "metrics.k8s-cluster.local:30923"
+   - "metrics.k8s-cluster.local:30924"
+   - "metrics.k8s-cluster.local:30925"
+# k8s-data-des
+   - "metrics.k8s-data-des.cluster.local:30910"
+   - "metrics.k8s-data-des.cluster.local:30911"
+   - "metrics.k8s-data-des.cluster.local:30912"
+   - "metrics.k8s-data-des.cluster.local:30913"
+   - "metrics.k8s-data-des.cluster.local:30914"
+   - "metrics.k8s-data-des.cluster.local:30915"
+   - "metrics.k8s-data-des.cluster.local:30921"
+   - "metrics.k8s-data-des.cluster.local:30922"
+   - "metrics.k8s-data-des.cluster.local:30923"
+   - "metrics.k8s-data-des.cluster.local:30924"
+   - "metrics.k8s-data-des.cluster.local:30925"
+# k8s-apps-des
+   - "metrics.k8s-apps-des.cluster.local:30910"
+   - "metrics.k8s-apps-des.cluster.local:30911"
+   - "metrics.k8s-apps-des.cluster.local:30912"
+   - "metrics.k8s-apps-des.cluster.local:30913"
+   - "metrics.k8s-apps-des.cluster.local:30914"
+   - "metrics.k8s-apps-des.cluster.local:30915"
+   - "metrics.k8s-apps-des.cluster.local:30921"
+   - "metrics.k8s-apps-des.cluster.local:30922"
+   - "metrics.k8s-apps-des.cluster.local:30923"
+   - "metrics.k8s-apps-des.cluster.local:30924"
+   - "metrics.k8s-apps-des.cluster.local:30925"
+# k8s-homologacao
+   - "metrics.nuvem.cluster.local:30910"
+   - "metrics.nuvem.cluster.local:30911"
+   - "metrics.nuvem.cluster.local:30912"
+   - "metrics.nuvem.cluster.local:30913"
+   - "metrics.nuvem.cluster.local:30914"
+   - "metrics.nuvem.cluster.local:30915"
+   - "metrics.nuvem.cluster.local:30921"
+   - "metrics.nuvem.cluster.local:30922"
+   - "metrics.nuvem.cluster.local:30923"
+   - "metrics.nuvem.cluster.local:30924"
+   - "metrics.nuvem.cluster.local:30925"
+# k8s-data-hml
+   - "metrics.data.nuvem.cluster.local:30910"
+   - "metrics.data.nuvem.cluster.local:30911"
+   - "metrics.data.nuvem.cluster.local:30912"
+   - "metrics.data.nuvem.cluster.local:30913"
+   - "metrics.data.nuvem.cluster.local:30914"
+   - "metrics.data.nuvem.cluster.local:30915"
+   - "metrics.data.nuvem.cluster.local:30921"
+   - "metrics.data.nuvem.cluster.local:30922"
+   - "metrics.data.nuvem.cluster.local:30923"
+   - "metrics.data.nuvem.cluster.local:30924"
+   - "metrics.data.nuvem.cluster.local:30925"
+# k8s-apps-hml
+   - "metrics.apps.nuvem.cluster.local:30910"
+   - "metrics.apps.nuvem.cluster.local:30911"
+   - "metrics.apps.nuvem.cluster.local:30912"
+   - "metrics.apps.nuvem.cluster.local:30913"
+   - "metrics.apps.nuvem.cluster.local:30914"
+   - "metrics.apps.nuvem.cluster.local:30915"
+   - "metrics.apps.nuvem.cluster.local:30921"
+   - "metrics.apps.nuvem.cluster.local:30922"
+   - "metrics.apps.nuvem.cluster.local:30923"
+   - "metrics.apps.nuvem.cluster.local:30924"
+   - "metrics.apps.nuvem.cluster.local:30925"
+# k8s-data-prd
+   - "metrics.data.cluster.local:30910"
+   - "metrics.data.cluster.local:30911"
+   - "metrics.data.cluster.local:30912"
+   - "metrics.data.cluster.local:30913"
+   - "metrics.data.cluster.local:30914"
+   - "metrics.data.cluster.local:30915"
+   - "metrics.data.cluster.local:30921"
+   - "metrics.data.cluster.local:30922"
+   - "metrics.data.cluster.local:30923"
+   - "metrics.data.cluster.local:30924"
+   - "metrics.data.cluster.local:30925"
+# k8s-canais-prd
+   - "metrics.canais.cluster.local:30910"
+   - "metrics.canais.cluster.local:30911"
+   - "metrics.canais.cluster.local:30912"
+   - "metrics.canais.cluster.local:30913"
+   - "metrics.canais.cluster.local:30914"
+   - "metrics.canais.cluster.local:30915"
+   - "metrics.canais.cluster.local:30921"
+   - "metrics.canais.cluster.local:30922"
+   - "metrics.canais.cluster.local:30923"
+   - "metrics.canais.cluster.local:30924"
+   - "metrics.canais.cluster.local:30925"
+# k8s-devops
+   - "metrics.k8s-devops.cluster.local:30910"
+   - "metrics.k8s-devops.cluster.local:30911"
+   - "metrics.k8s-devops.cluster.local:30912"
+   - "metrics.k8s-devops.cluster.local:30913"
+   - "metrics.k8s-devops.cluster.local:30914"
+   - "metrics.k8s-devops.cluster.local:30915"
+   - "metrics.k8s-devops.cluster.local:30921"
+   - "metrics.k8s-devops.cluster.local:30922"
+   - "metrics.k8s-devops.cluster.local:30923"
+   - "metrics.k8s-devops.cluster.local:30924"
+   - "metrics.k8s-devops.cluster.local:30925"
+# k8s-automacao
+   - "metrics.automacao.cluster.local:30910"
+   - "metrics.automacao.cluster.local:30911"
+   - "metrics.automacao.cluster.local:30912"
+   - "metrics.automacao.cluster.local:30913"
+   - "metrics.automacao.cluster.local:30914"
+   - "metrics.automacao.cluster.local:30915"
+   - "metrics.automacao.cluster.local:30921"
+   - "metrics.automacao.cluster.local:30922"
+   - "metrics.automacao.cluster.local:30923"
+   - "metrics.automacao.cluster.local:30924"
+   - "metrics.automacao.cluster.local:30925"
+# k8s-devops-infra
+   - "metrics.k8s-devops-infra.cluster.local:30910"
+   - "metrics.k8s-devops-infra.cluster.local:30911"
+   - "metrics.k8s-devops-infra.cluster.local:30912"
+   - "metrics.k8s-devops-infra.cluster.local:30913"
+   - "metrics.k8s-devops-infra.cluster.local:30914"
+   - "metrics.k8s-devops-infra.cluster.local:30915"
+   - "metrics.k8s-devops-infra.cluster.local:30921"
+   - "metrics.k8s-devops-infra.cluster.local:30922"
+   - "metrics.k8s-devops-infra.cluster.local:30923"
+   - "metrics.k8s-devops-infra.cluster.local:30924"
+   - "metrics.k8s-devops-infra.cluster.local:30925"
+# k8s-spi-prd
+   - "metrics.spi.cluster.local:30910"
+   - "metrics.spi.cluster.local:30911"
+   - "metrics.spi.cluster.local:30912"
+   - "metrics.spi.cluster.local:30913"
+   - "metrics.spi.cluster.local:30914"
+   - "metrics.spi.cluster.local:30915"
+   - "metrics.spi.cluster.local:30921"
+   - "metrics.spi.cluster.local:30922"
+   - "metrics.spi.cluster.local:30923"
+   - "metrics.spi.cluster.local:30924"
+   - "metrics.spi.cluster.local:30925"
+# # k8s-spi-prd-dr
+#   - "metrics.k8s-spi-prd-dr.cluster.local:30910"
+#   - "metrics.k8s-spi-prd-dr.cluster.local:30911"
+#   - "metrics.k8s-spi-prd-dr.cluster.local:30912"
+#   - "metrics.k8s-spi-prd-dr.cluster.local:30913"
+#   - "metrics.k8s-spi-prd-dr.cluster.local:30914"
+#   - "metrics.k8s-spi-prd-dr.cluster.local:30915"
+#   - "metrics.k8s-spi-prd-dr.cluster.local:30921"
+#   - "metrics.k8s-spi-prd-dr.cluster.local:30922"
+#   - "metrics.k8s-spi-prd-dr.cluster.local:30923"
+#   - "metrics.k8s-spi-prd-dr.cluster.local:30924"
+#   - "metrics.k8s-spi-prd-dr.cluster.local:30925"
+# k8s-servicos
+   - "metrics.svc.cluster.local:30910"
+   - "metrics.svc.cluster.local:30911"
+   - "metrics.svc.cluster.local:30912"
+   - "metrics.svc.cluster.local:30913"
+   - "metrics.svc.cluster.local:30914"
+   - "metrics.svc.cluster.local:30915"
+   - "metrics.svc.cluster.local:30921"
+   - "metrics.svc.cluster.local:30922"
+   - "metrics.svc.cluster.local:30923"
+   - "metrics.svc.cluster.local:30924"
+   - "metrics.svc.cluster.local:30925"
+# k8s-deploy
+   - "metrics.deploy.cluster.local:30910"
+   - "metrics.deploy.cluster.local:30911"
+   - "metrics.deploy.cluster.local:30912"
+   - "metrics.deploy.cluster.local:30913"
+   - "metrics.deploy.cluster.local:30914"
+   - "metrics.deploy.cluster.local:30915"
+   - "metrics.deploy.cluster.local:30921"
+   - "metrics.deploy.cluster.local:30922"
+   - "metrics.deploy.cluster.local:30923"
+   - "metrics.deploy.cluster.local:30924"
+   - "metrics.deploy.cluster.local:30925"
+# k8s-bigdata
+   - "metrics.bg.cluster.local:30910"
+   - "metrics.bg.cluster.local:30911"
+   - "metrics.bg.cluster.local:30912"
+   - "metrics.bg.cluster.local:30913"
+   - "metrics.bg.cluster.local:30914"
+   - "metrics.bg.cluster.local:30915"
+   - "metrics.bg.cluster.local:30921"
+   - "metrics.bg.cluster.local:30922"
+   - "metrics.bg.cluster.local:30923"
+   - "metrics.bg.cluster.local:30924"
+   - "metrics.bg.cluster.local:30925"
+# k8s-monitor
+   - "metrics.k8s-monitor.cluster.local:30910"
+   - "metrics.k8s-monitor.cluster.local:30911"
+   - "metrics.k8s-monitor.cluster.local:30912"
+   - "metrics.k8s-monitor.cluster.local:30913"
+   - "metrics.k8s-monitor.cluster.local:30914"
+   - "metrics.k8s-monitor.cluster.local:30915"
+   - "metrics.k8s-monitor.cluster.local:30921"
+   - "metrics.k8s-monitor.cluster.local:30922"
+   - "metrics.k8s-monitor.cluster.local:30923"
+   - "metrics.k8s-monitor.cluster.local:30924"
+   - "metrics.k8s-monitor.cluster.local:30925"
+# k8s-svc-ext-ibm01
+#   - "metrics.k8s-svc-ext-ibm01.ibm.cluster.local:30910"
+#   - "metrics.k8s-svc-ext-ibm01.ibm.cluster.local:30911"
+#   - "metrics.k8s-svc-ext-ibm01.ibm.cluster.local:30912"
+#   - "metrics.k8s-svc-ext-ibm01.ibm.cluster.local:30913"
+#   - "metrics.k8s-svc-ext-ibm01.ibm.cluster.local:30914"
+#   - "metrics.k8s-svc-ext-ibm01.ibm.cluster.local:30921"
+#   - "metrics.k8s-svc-ext-ibm01.ibm.cluster.local:30922"
+#   - "metrics.k8s-svc-ext-ibm01.ibm.cluster.local:30923"
+#   - "metrics.k8s-svc-ext-ibm01.ibm.cluster.local:30924"
+# k8s-apps-prd
+   - "metrics.k8s-apps-prd.cluster.local:30910"
+   - "metrics.k8s-apps-prd.cluster.local:30911"
+   - "metrics.k8s-apps-prd.cluster.local:30912"
+   - "metrics.k8s-apps-prd.cluster.local:30913"
+   - "metrics.k8s-apps-prd.cluster.local:30914"
+   - "metrics.k8s-apps-prd.cluster.local:30915"
+   - "metrics.k8s-apps-prd.cluster.local:30921"
+   - "metrics.k8s-apps-prd.cluster.local:30922"
+   - "metrics.k8s-apps-prd.cluster.local:30923"
+   - "metrics.k8s-apps-prd.cluster.local:30924"
+   - "metrics.k8s-apps-prd.cluster.local:30925"
+# thanos-rule
+   - "dnssrv+_grpc._tcp.kmo-central-thanos-rule-grpc.CGTI-central-thanos.svc.cluster.local" #thanos-rule                 
+  #
+  # Path to files that contains addresses of store API servers. The path can be a glob pattern (repeatable).
+  serviceDiscoveryFiles: []
+  # Names of configmaps that contain addresses of store API servers, used for file service discovery.
+  serviceDiscoveryFileConfigMaps: []
+  # Refresh interval to re-read file SD files. It is used as a resync fallback.
+  serviceDiscoveryInterval: 5m
+  # Log filtering level.
+  logLevel: info
+  # Log format to use. Possible options: logfmt or json.
+  logFormat: logfmt
+  # Add extra environment variables to query
+  extraEnv: []
+  # - name: ENV
+  #   value: value
+  #
+  # Add extra arguments to the query service
+  extraArgs: []
+  # - "--extraargs=extravalue"
+  #
+  # Number of replicas running from query component
+  replicaCount: 1
+  # Kubernetes deployment strategy object as documented in https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
+  strategy: {}
+  # Enable HPA for query component
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: 50
+  # Enable podDisruptionBudget for query component
+  podDisruptionBudget:
+    enabled: false
+      # minAvailable and maxUnavailable can't be used simultaneous. Choose one.
+    minAvailable: 1
+    #  maxUnavailable: 50%
+
+  # The grpc endpoint to communicate with other components
+  grpc:
+    # grpc listen port number
+    port: 10901
+    # Service definition for query grpc service
+    service:
+      # Annotations to query grpc service
+      annotations: {}
+      # Labels to query grpc service
+      labels: {}
+      # Match labels for service selector
+      matchLabels: {}
+    # Set up ingress for the grpc service
+    ingress:
+      enabled: false
+      # Set default backend for ingress
+      defaultBackend: false
+      annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+      labels: {}
+      path: "/"
+      hosts:
+        - "/"
+      tls: []
+      #  - secretName: chart-example-tls
+      #    hosts:
+      #      - chart-example.local
+  serviceAccount: ""
+
+  psp:
+    enabled: false
+  rbac:
+    enabled: false
+
+  # The http endpoint to communicate with other components
+  http:
+    # http listen port number
+    port: 10902
+    # Service definition for query http service
+    service:
+      type: ClusterIP
+      # Annotations to query http service
+      annotations: {}
+      # Labels to query http service
+      labels: {}
+      # Match labels for service selector
+      matchLabels: {}
+    # Set up ingress for the http service
+    ingress:
+      enabled: true
+      annotations: 
+        kubernetes.io/ingress.class: nginx
+        # kubernetes.io/tls-acme: "true"
+      labels: {}
+      path: "/"
+      hosts:
+        - "thanos-1.CGTI.cluster.local"
+      tls:
+       - secretName: CGTI-cert-tls
+         hosts:
+           - thanos-1.CGTI.cluster.local
+
+  certSecretName: ""
+  # Extra labels for query pod template
+  labels:
+   servico: metrics
+   thanos: central
+  #
+  # Extra annotations for query pod template
+  annotations: {}
+  #  example.com: default
+  #
+  # Add extra labels to query deployment
+  deploymentLabels: {}
+  #  extraLabel: extraLabelValue
+  #
+  # Add extra annotations to query deployment
+  deploymentAnnotations: {}
+  #  extraAnnotation: extraAnnotationValue
+  #
+  # Add extra selector matchLabels to query deployment
+  deploymentMatchLabels: {}
+  #
+  # Enable metrics collecting for query service
+  metrics:
+    # This is the Prometheus annotation type scraping configuration
+    annotations:
+      enabled: true
+    # Enable ServiceMonitor https://github.com/coreos/prometheus-operator
+    serviceMonitor:
+      enabled: false
+      # Labels for prometheus-operator to find servicemonitor
+      labels: {}
+
+  # Optional securityContext
+  securityContext: {}
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 16Gi
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+  #
+  # Node tolerations for server scheduling to nodes with taints
+  # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  tolerations:
+    - key: "node.k8s.bb/servico"
+      operator: "Equal"
+      value: "metrics"
+      effect: "NoSchedule"  
+  #
+  # Node labels for query pod assignment
+  # Ref: https://kubernetes.io/docs/user-guide/node-selection/
+  #
+  nodeSelector: 
+    node.k8s.bb/servico: "metrics"
+  #
+  # Pod affinity
+  # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#node-affinity
+  affinity: {}
+  # set up store readinessProbe & livenessProbe
+  # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+  livenessProbe:
+    httpGet:
+      path: /-/healthy
+      port: http
+  readinessProbe:
+    httpGet:
+      path: /-/ready
+      port: http
+
+compact:
+  enabled: true
+  # Minimum age of fresh (non-compacted) blocks before they are being processed.
+  # Malformed blocks older than the maximum of consistency-delay and 30m0s will be removed.
+  consistencyDelay: 30m
+  # How long to retain raw samples in bucket. 0d - disables this retention
+  retentionResolutionRaw: 7d
+  # How long to retain samples of resolution 1 (5 minutes) in bucket. 0d - disables this retention
+  retentionResolution5m: 14d
+  # How long to retain samples of resolution 2 (1 hour) in bucket. 0d - disables this retention
+  retentionResolution1h: 21d
+  # Number of goroutines to use when syncing block metadata from object storage.
+  blockSyncConcurrency: 20
+  # Number of goroutines to use when compacting groups.
+  compactConcurrency: 1
+  # Log filtering level.
+  logLevel: info
+  # Log format to use. Possible options: logfmt or json.
+  logFormat: logfmt
+  # Compact service listening http port
+  http:
+    port: 10902
+    service:
+      labels: {}
+      # Match labels for service selector
+      matchLabels: {}
+  # Add extra environment variables to compact
+  extraEnv:
+  # - name: ENV
+  #   value: value
+  #
+  # Add extra arguments to the compact service
+  extraArgs:
+  # - "--extraargs=extravalue"
+  #
+  # Kubernetes deployment strategy object as documented in https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
+  strategy: {}
+  # Data volume for the compactor to store temporary data defaults to emptyDir
+  dataVolume:
+    backend:
+     persistentVolumeClaim:
+       claimName: compact-data-volume
+  # Create the specified persistentVolumeClaim in case persistentVolumeClaim is
+  # used for the dataVolume.backend above and needs to be created.
+  persistentVolumeClaim: 
+    name: compact-data-volume
+    spec:
+      storageClassName: "local-path"
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 50Gi
+      volumeMode: "Filesystem"
+  # Extra labels for compact pod template
+  labels:
+   servico: metrics
+   thanos: central
+  #
+  # Extra annotations for compact pod template
+  annotations: {}
+  #  example.com: default
+  #
+  # Add extra labels to compact deployment
+  deploymentLabels: {}
+  #  extraLabel: extraLabelValue
+  #
+  # Add extra annotations to compact deployment
+  deploymentAnnotations: {}
+  #  extraAnnotation: extraAnnotationValue
+  #
+  # Add extra selector matchLabels to compact deployment
+  deploymentMatchLabels: {}
+  #
+  # Enable metrics collecting for compact service
+  metrics:
+    # This is the Prometheus annotation type scraping configuration
+    annotations:
+      enabled: true
+    # Enable ServiceMonitor https://github.com/coreos/prometheus-operator
+    serviceMonitor:
+      enabled: false
+      # Labels for prometheus-operator to find servicemonitor
+      labels: {}
+  serviceAccount: ""
+
+  # Optional securityContext
+  securityContext: {}
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 16Gi
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+  #
+  # Node tolerations for server scheduling to nodes with taints
+  # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  tolerations:
+    - key: "node.k8s.bb/servico"
+      operator: "Equal"
+      value: "metrics"
+      effect: "NoSchedule"  
+  #
+  # Node labels for compact pod assignment
+  # Ref: https://kubernetes.io/docs/user-guide/node-selection/
+  #
+  nodeSelector: 
+    node.k8s.bb/servico: "metrics"
+  #
+  # Pod affinity
+  # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#node-affinity
+  affinity: {}
+
+bucket:
+  enabled: true
+  # Number of replicas running from bucket component
+  replicaCount: 1
+  # Log filtering level.
+  logLevel: info
+  # Log format to use. Possible options: logfmt or json.
+  logFormat: logfmt
+  # Refresh interval to download metadata from remote storage
+  refresh: 30m
+  # Timeout to download metadata from remote storage
+  timeout: 5m
+  # Prometheus label to use as timeline title
+  label: ""
+  # The http endpoint to communicate with other components
+  http:
+    # http listen port number
+    port: 8080
+    # Service definition for bucket http service
+    service:
+      type: ClusterIP
+      # Annotations to bucket http service
+      annotations: {}
+      # Labels to bucket http service
+      labels: {}
+      # Match labels for service selector
+      matchLabels: {}
+    # Set up ingress for the http service
+    ingress:
+      enabled: false
+      # Set default backend for ingress
+      defaultBackend: false
+      annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+      labels: {}
+      path: "/"
+      hosts:
+        - "/"
+      tls: []
+      #  - secretName: chart-example-tls
+      #    hosts:
+      #      - chart-example.local
+  # Add extra environment variables to bucket
+  extraEnv:
+  # - name: ENV
+  #   value: value
+  #
+  # Add extra arguments to the bucket service
+  extraArgs:
+  # - "--extraargs=extravalue"
+  #
+  # Kubernetes deployment strategy object as documented in https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
+  strategy: {}
+  # Extra labels for bucket pod template
+  labels:
+   servico: metrics
+   thanos: central
+  #
+  # Extra annotations for bucket pod template
+  annotations: {}
+  #  example.com: default
+  #
+  # Add extra labels to bucket deployment
+  deploymentLabels: {}
+  #  extraLabel: extraLabelValue
+  #
+  # Add extra annotations to bucket deployment
+  deploymentAnnotations: {}
+  #
+  # Add extra selector matchLabels to bucket deployment
+  deploymentMatchLabels: {}
+
+  # Enable podDisruptionBudget for bucket component
+  podDisruptionBudget:
+    enabled: false
+      # minAvailable and maxUnavailable can't be used simultaneous. Choose one.
+    minAvailable: 1
+    #  maxUnavailable: 50%
+
+  # Optional securityContext
+  securityContext: {}
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 16Gi
+    requests:
+      cpu: 1000m
+      memory: 4Gi
+  #
+  # Node tolerations for server scheduling to nodes with taints
+  # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  tolerations:
+    - key: "node.k8s.bb/servico"
+      operator: "Equal"
+      value: "metrics"
+      effect: "NoSchedule"  
+  #
+  # Node labels for bucket pod assignment
+  # Ref: https://kubernetes.io/docs/user-guide/node-selection/
+  #
+  nodeSelector: 
+    node.k8s.bb/servico: "metrics"
+  #
+  # Pod affinity
+  # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#node-affinity
+  affinity: {}
+  serviceAccount: ""
+
+rule:
+  enabled: true
+  # Labels to be applied to all generated metrics (repeated). Similar to external labels for
+  # Prometheus, used to identify ruler and its blocks as unique source.
+  ruleLabels: {}
+  # Minimum amount of time to wait before resending an alert to Alertmanager.
+  resendDelay: ""
+  # The default evaluation interval to use.
+  evalInterval: ""
+  # Block duration for TSDB block.
+  tsdbBlockDuration: ""
+  # Block retention time on local disk.
+  tsdbRetention: ""
+  # Prefix for API and UI endpoints. This allows thanos UI to be served on a sub-path.
+  # This option is analogous to --web.route-prefix of Promethus.
+  webRoutePrefix: ""
+  # Static prefix for all HTML links and redirect
+  # URLs in the UI web interface. Actual
+  #  endpoints are still served on / or the
+  # web.route-prefix. This allows thanos UI to be
+  # served behind a reverse proxy that strips a URL sub-path.
+  webExternalPrefix: ""
+  # Name of HTTP request header used for dynamic prefixing of UI links and redirects.
+  # This option is ignored if web.external-prefix argument is set. Security risk: enable this
+  # option only if a reverse proxy in front of thanos is resetting the header. The --web.prefix-header=X-Forwarded-Prefix option
+  # can be useful, for example, if Thanos UI is served via Traefik reverse proxy with PathPrefixStrip option enabled, which sends the
+  # stripped prefix value in X-Forwarded-Prefix header. This allows thanos UI to be served on a sub-path
+  webPrefixHeader: ""
+  # Enable DNS discovery for stores
+  queryDNSDiscovery: true
+  # Alertmanager replica URLs to push firing alerts. Ruler claims success if push to at
+  # least one alertmanager from discovered succeeds. The scheme may be prefixed with
+  # 'dns+' or 'dnssrv+' to detect Alertmanager IPs  through respective DNS lookups. The port
+  # defaults to 9093 or the SRV record's value. The URL path is used as a prefix for the regular
+  # Alertmanager API path.
+  alertmanagers:
+    - "http://alertmanager-1.CGTI.cluster.local"
+  # Timeout for sending alerts to alertmanager
+  alertmanagersSendTimeout: ""
+  # The external Thanos Query URL that would be set in all alerts 'Source' field
+  alertQueryUrl: "http://thanos-1.CGTI.cluster.local"
+  # Labels by name to drop before sending to alertmanager. This allows alert to be
+  # deduplicated on replica label (repeated). Similar Prometheus alert relabelling
+  alertLabelDrop: []
+  # Override rules file
+  ruleOverrideName: "thanos-central-rules"
+  # Rule files for rule
+  ruleFiles:
+    alerting_rules.yaml: {}
+    # groups:
+    #   - name: Instances
+    #     rules:
+    #       - alert: InstanceDown
+    #         expr: up == 0
+    #         for: 5m
+    #         labels:
+    #           severity: page
+    #         annotations:
+    #           description: '{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 5 minutes.'
+    #           summary: 'Instance {{ $labels.instance }} down'
+  # Log filtering level.
+  logLevel: info
+  # Log format to use. Possible options: logfmt or json.
+  logFormat: logfmt
+  # Add extra environment variables to rule
+  extraEnv: []
+  # - name: ENV
+  #   value: value
+  #
+  # Add extra arguments to the rule service
+  extraArgs: []
+  # - "--extraargs=extravalue"
+  #
+  # Number of replicas running from rule component
+  replicaCount: 1
+  # Kubernetes update strategy object as documented in https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
+  updateStrategy: {}
+  # Enable HPA for rule component
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: 50
+  # Enable podDisruptionBudget for rule component
+  podDisruptionBudget:
+    enabled: false
+    # minAvailable and maxUnavailable can't be used simultaneous. Choose one.
+    minAvailable: 1
+    #  maxUnavailable: 50%
+
+  # The grpc endpoint to communicate with other components
+  grpc:
+    # grpc listen port number
+    port: 10901
+    # Service definition for rule grpc service
+    service:
+      # Annotations to rule grpc service
+      annotations: {}
+      # labels to rule grpc service
+      labels: {}
+      # Match labels for service selector
+      matchLabels: {}
+    # Set up ingress for the grpc service
+    ingress:
+      enabled: false
+      # Set default backend for ingress
+      defaultBackend: false
+      annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+      labels: {}
+      path: "/"
+      hosts:
+        - "/"
+      tls: []
+      #  - secretName: chart-example-tls
+      #    hosts:
+      #      - chart-example.local
+  serviceAccount: ""
+
+  # The http endpoint to communicate with other components
+  http:
+    # http listen port number
+    port: 10902
+    # Service definition for rule http service
+    service:
+      type: ClusterIP
+      # Annotations to rule http service
+      annotations: {}
+      # Labels to rule http service
+      labels: {}
+      # Match labels for service selector
+      matchLabels: {}
+    # Set up ingress for the http service
+    ingress:
+      enabled: true
+      annotations: 
+        kubernetes.io/ingress.class: nginx
+        # kubernetes.io/tls-acme: "true"
+      labels: {}
+      path: "/"
+      hosts:
+        - "thanos-rule-1.CGTI.cluster.local"
+      tls: []
+      #  - secretName: CGTI-cert-tls
+      #    hosts:
+      #      - thanos-rule-1.CGTI.cluster.local
+
+  certSecretName: ""
+  # Extra labels for rule pod template
+  labels:
+   servico: metrics
+   thanos: central
+  #
+  # Extra annotations for rule pod template
+  annotations: {}
+  #  example.com: default
+  #
+  # Add extra labels to rule deployment
+  statefulsetLabels: {}
+  #  extraLabel: extraLabelValue
+  #
+  # Add extra annotations to rule deployment
+  statefulsetAnnotations: {}
+  #  extraAnnotation: extraAnnotationValue
+  #
+  #
+  # Add extra selector matchLabels to rule deployment
+  statefulsetMatchLabels: {}
+  # Enable metrics collecting for rule service
+  metrics:
+    # This is the Prometheus annotation type scraping configuration
+    annotations:
+      enabled: true
+    # Enable ServiceMonitor https://github.com/coreos/prometheus-operator
+    serviceMonitor:
+      enabled: false
+      # Labels for prometheus-operator to find servicemonitor
+      labels: {}
+
+  # Optional securityContext
+  securityContext: {}
+  resources: {}
+  #  limits:
+  #    cpu: 2000m
+  #    memory: 16Gi
+  #  requests:
+  #    cpu: 1000m
+  #    memory: 4Gi
+  #
+  # Node tolerations for server scheduling to nodes with taints
+  # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  tolerations:
+    - key: "node.k8s.bb/servico"
+      operator: "Equal"
+      value: "metrics"
+      effect: "NoSchedule"  
+  #
+  # Node labels for rule pod assignment
+  # Ref: https://kubernetes.io/docs/user-guide/node-selection/
+  #
+  nodeSelector: 
+    node.k8s.bb/servico: "metrics"
+  #
+  # Pod affinity
+  # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#node-affinity
+  affinity: {}
+
+
+sidecar:
+  # NOTE: This is only the service references for the sidecar
+  enabled: true
+  selector:
+    app: prometheus
+  # Enable metrics collecting for sidecar service
+  metrics:
+    # Enable ServiceMonitor https://github.com/coreos/prometheus-operator
+    serviceMonitor:
+      enabled: false
+      # Labels for prometheus-operator to find servicemonitor
+      labels: {}
+  # The grpc endpoint to communicate with other components
+  grpc:
+    # grpc listen port number
+    port: 10901
+    # Service definition for sidecar grpc service
+    service:
+      type: ClusterIP
+      # The node port number to use when the service type is set as 'NodePort'
+      nodePort: 31901
+      # External IPs assigned to sidecar grpc service
+      externalIPs: []
+      # Annotations to sidecar grpc service
+      annotations: {}
+      # Labels to sidecar grpc service
+      labels: {}
+    # Set up ingress for the grpc service
+    ingress:
+      enabled: false
+      # Set default backend for ingress
+      defaultBackend: false
+      annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+      labels: {}
+      path: "/"
+      hosts:
+        - "/"
+      tls: []
+      #  - secretName: chart-example-tls
+      #    hosts:
+      #      - chart-example.local
+
+  # The http endpoint to communicate with other components
+  http:
+    # http listen port number
+    port: 10902
+    # Service definition for sidecar http service
+    service:
+      type: ClusterIP
+      # Annotations to sidecar http service
+      annotations: {}
+      # Labels to sidecar http service
+      labels: {}
+    # Set up ingress for the http service
+    ingress:
+      enabled: false
+      # Set default backend for ingress
+      defaultBackend: false
+      annotations: {}
+        # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+      labels: {}
+      path: "/"
+      hosts:
+        - "/"
+      tls: []
+      #  - secretName: chart-example-tls
+      #    hosts:
+      #      - chart-example.local
+
+
+# This is the general backend configuration. Please se the examples below to configurate object store.
+# More information can be found at thanos github repositoriy: https://github.com/thanos-io/thanos/blob/master/docs/storage.md
+# Existing secret containing the configuration. The key must be `object-store.yaml`
+objstoreSecretOverride: ""
+# Text representation of the configuration
+objstoreFile: ""
+# YAML representation of the configuration. It's mutually exclusive with objstoreFile.
+# YAML representation of the configuration. It's mutually exclusive with objstoreFile.
+# objstore:
+objstore:
+  type: SWIFT
+  config:
+    auth_url: https://medley.cluster.local:5000/v3
+    username: nvi1CGTI03002-app
+    user_domain_name: app_credendials
+    password: bnZpMXBzYzAzMDAy
+    project_id: 56e126da8b434cd184d74c1081e2b793
+    project_name: nvi1CGTI03002
+    project_domain_id: 2aedb656e6804ed0ab7d27a0529ab76c
+    project_domain_name: SCN
+    region_name: medley
+    container_name: thanos-central-prd-1

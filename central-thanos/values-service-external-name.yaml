@@ -1,0 +1,6 @@
+service-external-name:
+  enable: true
+  namespace: CGTI-proxy
+  service:
+    - name: thanos-central
+      urlExterna: kdi-central-thanos-query-http.CGTI-central-thanos.svc.cluster.local
